@@ -96,29 +96,24 @@ export class TelegramBotApp {
       thcDisplay = thcRaw;
     }
 
-    // Header: name / type / also known as
+    // Header: name / type / THC / also known as
     pushIf("Name", strain.name);
-    pushIf("Type", get("type"));
-    pushIf("Also known as", get("akas"));
+    pushIf("AKA", get("akas"));
     if (lines.length > 0) lines.push(""); // blank line
 
-    // Effects block
-    pushIf("Top effect", get("top_effect"));
-    pushIf("Positive effects", get("positive_effects"));
-    pushIf("Negative effects", get("negative_effects"));
-    if (lines[lines.length - 1] !== "") lines.push("");
-
-    // Chemical / flavor block
+    pushIf("Type", get("type"));
     if (thcDisplay) {
       pushIf("THC", thcDisplay);
     }
-    pushIf("Flavors", get("flavors"));
-    pushIf("Terpenes", get("detailed_terpenes"));
-    pushIf("Helps with", get("helps_with"));
-    if (lines[lines.length - 1] !== "") lines.push("");
+    if (lines.length > 0) lines.push(""); // blank line
 
-    // Rating
-    pushIf("Rating", get("rating"));
+    // Chemical / flavor / effects block
+    pushIf("Flavours", get("flavors"));
+    pushIf("Terpenes", get("detailed_terpenes"));
+    if (lines.length > 0) lines.push(""); // blank line
+
+    pushIf("Effects", get("positive_effects"));
+    pushIf("Helps with", get("helps_with"));
     if (lines[lines.length - 1] !== "") lines.push("");
 
     // Description last
