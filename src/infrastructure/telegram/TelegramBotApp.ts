@@ -103,7 +103,7 @@ export class TelegramBotApp {
 
     pushIf("Type", get("type"));
     if (thcDisplay) {
-      pushIf("THC", thcDisplay);
+      pushIf("Averaging", `THC ${thcDisplay}`);
     }
     if (lines.length > 0) lines.push(""); // blank line
 
