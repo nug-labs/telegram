@@ -5,9 +5,3 @@ export interface Strain {
   akas?: string[];
   [key: string]: unknown;
 }
-
-export interface StrainMatch {
-  strain: Strain;
-  matchedBy: "name" | "aka";
-}
-

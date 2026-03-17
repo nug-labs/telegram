@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { PasteContentService } from "../http/HttpPastePageFetcher";
+import type { PasteContentService } from "../../core/contracts/PasteContentService";
 
 // Support both the full domain and the short jpst.it links
 const JUSTPASTE_REGEX =
@@ -7,9 +7,8 @@ const JUSTPASTE_REGEX =
 
 /**
  * JustPasteIt-specific implementation of PasteContentService.
- * This file is gitignored so the vendor-specific wiring is not part of the public repo.
  */
-export class JustPasteItContentFetcher implements PasteContentService {
+export class JustPasteItPasteContentService implements PasteContentService {
   extractUrlFromText(text: string): string | null {
     const match = text.match(JUSTPASTE_REGEX);
     return match ? match[0] : null;
@@ -25,4 +24,3 @@ export class JustPasteItContentFetcher implements PasteContentService {
     return text.replace(/\s+/g, " ").trim();
   }
 }
-

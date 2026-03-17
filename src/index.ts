@@ -1,14 +1,13 @@
 import "dotenv/config";
-import { NormalizedStrainRepository } from "./core/services/NormalizedStrainRepository";
-import { HttpLlmTextAnalysisService } from "./infrastructure/ai/HttpLlmTextAnalysisService";
-import type { PasteContentService } from "./infrastructure/http/HttpPastePageFetcher";
+import { NugLabsClient } from "nuglabs";
+import { OpenAiTextAnalysisService } from "./infrastructure/ai/OpenAiTextAnalysisService";
+import type { PasteContentService } from "./core/contracts/PasteContentService";
 import { TelegramBotApp } from "./infrastructure/telegram/TelegramBotApp";
-import { JustPasteItContentFetcher } from "./infrastructure/pasteit/JustPasteItContentFetcher";
+import { JustPasteItPasteContentService } from "./infrastructure/pasteit/JustPasteItPasteContentService";
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 const llmApiKey = process.env.OPENAI_API_KEY;
-const apiBaseUrl =
-  process.env.STRAIN_API_BASE_URL || "https://strains.nuglabs.co";
+const apiBaseUrl = process.env.STRAIN_API_BASE_URL?.trim();
 const botUsername =
   process.env.TELEGRAM_BOT_USERNAME || "StrainIndexBot";
 
@@ -25,15 +24,23 @@ if (!llmApiKey) {
 }
 
 async function main() {
-  const strainRepository = new NormalizedStrainRepository(apiBaseUrl);
-  const textAnalysisService = new HttpLlmTextAnalysisService(llmApiKey!);
-  const pasteContentService: PasteContentService = new JustPasteItContentFetcher();
+  const strainClient = new NugLabsClient(
+    apiBaseUrl
+      ? {
+          apiBaseUrl,
+          cacheInMemory: true,
+        }
+      : {
+          cacheInMemory: true,
+        }
+  );
+  const textAnalysisService = new OpenAiTextAnalysisService(llmApiKey!);
+  const pasteContentService: PasteContentService = new JustPasteItPasteContentService();
 
   const app = new TelegramBotApp({
     botToken: botToken!,
-    apiBaseUrl,
     botUsername,
-    strainRepository,
+    strainClient,
     textAnalysisService,
     pasteContentService,
   });

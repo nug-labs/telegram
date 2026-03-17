@@ -10,4 +10,3 @@ export interface PasteContentService {
    */
   fetchText(url: string): Promise<string>;
 }
-

@@ -1,14 +1,13 @@
+import { NugLabsClient } from "nuglabs";
 import { Telegraf, Context } from "telegraf";
-import type { StrainRepository } from "../../core/ports/StrainRepository";
-import type { TextAnalysisService } from "../../core/ports/TextAnalysisService";
-import type { PasteContentService } from "../http/HttpPastePageFetcher";
-import type { Strain } from "../../core/StrainTypes";
+import type { TextAnalysisService } from "../../core/contracts/TextAnalysisService";
+import type { PasteContentService } from "../../core/contracts/PasteContentService";
+import type { Strain } from "../../core/models/Strain";
 
 export interface BotConfig {
   botToken: string;
-  apiBaseUrl: string;
   botUsername: string;
-  strainRepository: StrainRepository;
+  strainClient: NugLabsClient;
   textAnalysisService: TextAnalysisService;
   pasteContentService: PasteContentService;
 }
@@ -24,12 +23,7 @@ export class TelegramBotApp {
   }
 
   async init(): Promise<void> {
-    await this.config.strainRepository.refresh();
-    // refresh every 12 hours
-    setInterval(
-      () => this.config.strainRepository.refresh().catch(console.error),
-      12 * 60 * 60 * 1000
-    );
+    await this.config.strainClient.initialize();
   }
 
   launch(): void {
@@ -89,12 +83,8 @@ export class TelegramBotApp {
     };
 
     const thcRaw = get("thc");
-    let thcDisplay: string | null = null;
-    if (typeof thcRaw === "number") {
-      thcDisplay = `${thcRaw}%`;
-    } else if (typeof thcRaw === "string" && thcRaw.trim()) {
-      thcDisplay = thcRaw;
-    }
+    const thcDisplay =
+      typeof thcRaw === "number" ? `${thcRaw}%` : null;
 
     // Header: name / type / THC / also known as
     pushIf("Name", strain.name);
@@ -107,9 +97,9 @@ export class TelegramBotApp {
     }
     if (lines.length > 0) lines.push(""); // blank line
 
-    // Chemical / flavor / effects block
-    pushIf("Flavours", get("flavors"));
-    pushIf("Terpenes", get("detailed_terpenes"));
+    // Chemical / flavour / effects block
+    pushIf("Flavours", get("flavours"));
+    pushIf("Terpenes", get("terpenes"));
     if (lines.length > 0) lines.push(""); // blank line
 
     pushIf("Effects", get("positive_effects"));
@@ -128,14 +118,14 @@ export class TelegramBotApp {
       return;
     }
 
-    const match = this.config.strainRepository.findByNameOrAka(query);
-    if (!match) {
+    const strain = (await this.config.strainClient.getStrain(query)) as Strain | null;
+    if (!strain) {
       await ctx.reply("Strain not found.");
       return;
     }
 
-    const text = this.formatStrain(match.strain);
-    const deepLink = this.buildDeepLink(match.strain.name);
+    const text = this.formatStrain(strain);
+    const deepLink = this.buildDeepLink(strain.name);
 
     // Use Markdown so keys stay bold, but keep the deep link as plain text.
     await ctx.replyWithMarkdown(`${text}\n\n${deepLink}`);
@@ -144,7 +134,7 @@ export class TelegramBotApp {
   private async handlePasteLink(ctx: Context, url: string): Promise<void> {
     try {
       const text = await this.config.pasteContentService.fetchText(url);
-      const allStrains = this.config.strainRepository.getAll();
+      const allStrains = (await this.config.strainClient.getAllStrains()) as Strain[];
       const knownNames = allStrains.map((s) => s.name);
 
       const mentionedNames = await this.config.textAnalysisService.extractKnownNames(
@@ -162,11 +152,11 @@ export class TelegramBotApp {
 
       const found: { name: string; link: string }[] = [];
       for (const name of uniqueNames) {
-        const match = this.config.strainRepository.findByNameOrAka(name);
-        if (match) {
+        const strain = (await this.config.strainClient.getStrain(name)) as Strain | null;
+        if (strain) {
           found.push({
-            name: match.strain.name,
-            link: this.buildDeepLink(match.strain.name),
+            name: strain.name,
+            link: this.buildDeepLink(strain.name),
           });
         }
       }

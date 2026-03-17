@@ -5,4 +5,3 @@ export interface TextAnalysisService {
    */
   extractKnownNames(text: string, knownNames: string[]): Promise<string[]>;
 }
-

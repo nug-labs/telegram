@@ -1,20 +1,19 @@
-import type { TextAnalysisService } from "../../core/ports/TextAnalysisService";
+import type { TextAnalysisService } from "../../core/contracts/TextAnalysisService";
 
 interface ChatCompletionResponse {
   choices: { message?: { content?: string } }[];
 }
 
 /**
- * Generic HTTP-based LLM implementation of TextAnalysisService.
- * The concrete provider (e.g. OpenAI) is configured via API key and model name.
+ * OpenAI-backed implementation of TextAnalysisService.
  */
-export class HttpLlmTextAnalysisService implements TextAnalysisService {
+export class OpenAiTextAnalysisService implements TextAnalysisService {
   private readonly apiKey: string;
   private readonly model: string;
 
   constructor(apiKey: string, model = "gpt-4.1-mini") {
     if (!apiKey) {
-      throw new Error("API key is required for HttpLlmTextAnalysisService");
+      throw new Error("API key is required for OpenAiTextAnalysisService");
     }
     this.apiKey = apiKey;
     this.model = model;
@@ -73,4 +72,3 @@ export class HttpLlmTextAnalysisService implements TextAnalysisService {
     return [];
   }
 }
-
