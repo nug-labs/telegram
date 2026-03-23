@@ -82,6 +82,11 @@ export class TelegramBotApp {
       lines.push(`*${label}:* ${text}`);
     };
 
+    const limitArray = (value: unknown, max = 3): unknown => {
+      if (!Array.isArray(value)) return value;
+      return value.slice(0, max);
+    };
+
     const thcRaw = get("thc");
     const thcDisplay =
       typeof thcRaw === "number" ? `${thcRaw}%` : null;
@@ -98,16 +103,23 @@ export class TelegramBotApp {
     if (lines.length > 0) lines.push(""); // blank line
 
     // Chemical / flavour / effects block
-    pushIf("Flavours", get("flavours"));
-    pushIf("Terpenes", get("terpenes"));
+    pushIf("Flavours", limitArray(get("flavours")));
+    pushIf("Aromas", limitArray(get("aromas")));
     if (lines.length > 0) lines.push(""); // blank line
 
-    pushIf("Effects", get("positive_effects"));
-    pushIf("Helps with", get("helps_with"));
+    pushIf("Terpenes", limitArray(get("terpenes")));
+    if (lines.length > 0) lines.push(""); // blank line
+
+    pushIf("Effects", limitArray(get("effects")));
+    pushIf("Helps with", limitArray(get("helps_with")));
     if (lines[lines.length - 1] !== "") lines.push("");
 
-    // Description last
-    pushIf("Description", get("description"));
+    // Description last (prefer short summary from new dataset shape)
+    const description =
+      get("description_sm") ??
+      get("description_md") ??
+      get("description_lg");
+    pushIf("Description", description);
 
     return lines.join("\n");
   }

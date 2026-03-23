@@ -34,6 +34,20 @@ async function main() {
           cacheInMemory: true,
         }
   );
+
+  // TODO: Move this behavior into SDK initialization, so consumers do not need to manually refresh on startup.
+  // For now, force a sync on bot boot so newly deployed API data is available immediately.
+  try {
+    const sync = await strainClient.forceResync();
+    // eslint-disable-next-line no-console
+    console.log(
+      `NugLabs sync completed. source=${sync.source} count=${sync.count} updatedAt=${sync.updatedAt}`
+    );
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn("NugLabs startup sync failed, continuing with local dataset.", error);
+  }
+
   const textAnalysisService = new OpenAiTextAnalysisService(llmApiKey!);
   const pasteContentService: PasteContentService = new JustPasteItPasteContentService();
 
