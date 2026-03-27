@@ -11,11 +11,13 @@
   "dependencies": {
     "axios": "^1.7.7",
     "dotenv": "^17.3.1",
-    "nuglabs": "^1.0.0",
+    "nuglabs": "^1.2.3",
+    "pg": "^8.16.3",
     "telegraf": "^4.16.3"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
+    "@types/pg": "^8.15.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   }
