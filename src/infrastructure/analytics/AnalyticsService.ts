@@ -13,6 +13,7 @@ export type AnalyticsEventName =
   | "bot_empty_query"
   | "bot_paste_match_none"
   | "bot_paste_matched"
+  | "bot_inline_query"
   | "bot_strain_found"
   | "bot_strain_not_found"
   | "openai_extract_start"

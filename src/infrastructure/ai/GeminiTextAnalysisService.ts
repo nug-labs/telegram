@@ -39,16 +39,15 @@ function stripJsonCodeFence(text: string): string {
 }
 
 function normalizeName(name: string): string {
-  return name.trim().replace(/\s+/g, " ");
-}
-
-function truncate(value: string, max = 800): string {
-  if (value.length <= max) return value;
-  return `${value.slice(0, max)}… (truncated, ${value.length} chars)`;
+  return name
+    .replace(/#/g, "")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 function normalizePasteText(raw: string): string {
   return raw
+    .replace(/#/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&nbsp;/g, " ")
     // Drop obvious pricing/quantity blobs that bloat tokens.
@@ -103,10 +102,6 @@ export class GeminiTextAnalysisService implements TextAnalysisService {
     // Keep the input bounded so the model has room to respond fully.
     const boundedText = cleanedText.length > 12000 ? cleanedText.slice(0, 12000) : cleanedText;
     const modelInput = `${system}\n\nTEXT:\n${boundedText}`;
-    // eslint-disable-next-line no-console
-    console.log("[gemini] model:", this.model);
-    // eslint-disable-next-line no-console
-    console.log("[gemini] input:", truncate(modelInput, 2000));
 
     const res = await fetch(endpoint, {
       method: "POST",
@@ -165,9 +160,6 @@ export class GeminiTextAnalysisService implements TextAnalysisService {
     const content =
       data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("\n") ?? "[]";
 
-    // eslint-disable-next-line no-console
-    console.log("[gemini] raw output:", truncate(content, 2000));
-
     const tryParse = (raw: string): string[] | null => {
       try {
         const parsed = JSON.parse(raw);
@@ -184,9 +176,6 @@ export class GeminiTextAnalysisService implements TextAnalysisService {
       (extractFirstJsonArray(unfenced) ? tryParse(extractFirstJsonArray(unfenced)!) : null);
 
     const output = Array.from(new Set((parsed ?? []).map(normalizeName).filter(Boolean))).slice(0, 50);
-
-    // eslint-disable-next-line no-console
-    console.log("[gemini] parsed names:", output);
 
     this.analytics?.info("gemini_extract_success", {
       props: { durationMs: Date.now() - startedAt, extractedCount: output.length },
